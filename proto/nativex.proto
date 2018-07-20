@@ -1,0 +1,297 @@
+package nativex;
+message BidRequest {
+	//Zyz生产唯一竞价ID
+	optional string bid = 1;	
+	
+	enum DeviceType { 
+		DeviceType_Unknown = 0;
+		DeviceType_Pad = 1;
+		DeviceType_Phone = 2;
+		DeviceType_PC = 3;
+		DeviceType_TV = 4;
+		DeviceType_TVBox = 5;
+	}
+
+	enum OsType {
+		OsType_Android = 0;
+		OsType_iOS = 1;
+		OsType_WP = 2;
+		OsType_Other = 3;
+	}
+
+	enum ConnectionType { 
+		ConnectionType_Unknown = 0;
+		ConnectionType_Wifi = 1;
+		ConnectionType_Cell2G = 2;
+		ConnectionType_Cell3G = 3;
+		ConnectionType_Cell4G = 4;
+		ConnectionType_Cell_Unknown = 100;
+		ConnectionType_Ethernet = 101;
+	}
+
+	enum Gender {
+		Gender_Unkown = 0;
+		Gender_Male = 1;
+		Gender_Female = 2;
+		Gender_Other = 3;
+	}	
+
+	enum SlotType {
+		SlotType_Feeds = 1;
+		SlotType_Banner = 2;
+		SlotType_Interstitial = 3;
+		SlotType_Native = 5;
+		SlotType_Card = 6;
+		SlotType_Splash = 7;
+		SlotType_TCVideo = 8;
+		SlotType_PicAndVideo = 9;
+	}
+	
+	enum EncType {
+		EncType_Origin = 0;
+		EncType_Md5 = 1;	
+		EncType_Sha1 = 2;
+	}
+
+	message Size {
+		required int32 w = 1;
+		required int32 h = 2;
+	}
+
+	enum SaleMode {
+		SaleModeRTB = 0;
+		SaleModePA = 1;
+		SaleModePD = 2;
+		SaleModePDB = 3;
+	}
+
+	//banner
+	message Banner {
+		// 广告位的尺寸
+		optional Size slot_size = 1;
+		// 允许的素材尺寸，如果format为空，取slot_size
+		repeated Size format = 2;
+		//允许的素材类型(RFC2046)
+		repeated string mimes = 4;
+	}
+
+	enum ImageType {
+		ImageType_Icon = 1;
+		ImageType_Logo = 2;
+		ImageType_Main = 3;
+	}
+
+	message ImageAsset {
+		optional ImageType type = 1;
+		optional int32 w = 2;
+		optional int32 wmin = 3;
+		optional int32 h = 4;
+		optional int32 hmin = 5;
+		repeated string mimes = 6;
+	}
+
+	message VideoAsset {
+		optional int32 minduration = 1;
+		optional int32 maxduration = 2;
+		repeated string mimes = 3;
+		optional int32 w = 4;
+		optional int32 h = 5;
+	}
+
+	message Asset {
+		optional string id = 1;
+		optional int32 title_len = 2 [default = 30];
+		optional ImageAsset image = 3;
+		optional VideoAsset video = 4;
+	}
+
+	//native
+	message Native {
+		// feeds的上下文类型，参考接入文档定义
+		optional int32 context_type = 1;
+		optional int32 context_sutype = 2;
+		repeated Asset asset = 3;
+	}
+	//video
+	message Video{
+		optional Size slot_size = 1;
+		repeated string mimes = 2;
+		optional int32 minduration = 3;
+		optional int32 maxduration = 4;
+		optional int32 minbitrate = 5;
+		optional int32 maxbitrate = 6;
+		optional bool skipable = 7;
+		optional int32 skipafter = 8;
+		enum VideoLinearity {
+			VideoLinearity_Instream = 1;
+			VideoLinearity_Overlay = 2;
+		}
+		optional VideoLinearity linearity = 9;
+		optional bool boxingallowed = 10;
+		enum PlaybackMethod {
+			PlaybackMethod_AutoPlay = 1;
+			PlaybackMethod_AutoPlayMute = 2;
+			PlaybackMethod_ClickPlay = 3;
+			PlaybackMethod_MouseOver = 4;
+		}
+		optional PlaybackMethod playback_method = 11;
+	}
+
+	//impression对象
+    message Impression {
+		//唯一id
+		optional string id = 1;
+		//广告位id
+		optional string slotId = 2;
+		//banner对象
+		optional Banner banner = 3;
+		//native对象
+		optional Native native = 4;
+		//video对象 
+		optional Video video = 5;
+		//曝光底价  单位: 分/cpm
+		optional int32 bidfloor = 7;
+		//preload>0表示请求preload个创意用于缓存, preload=0表示普通竞价
+		optional int32 preload = 8;
+		optional SlotType slot_type = 9;
+		repeated string dealid = 10;
+		optional SaleMode saleMode = 11;
+		repeated string templateIdlist = 12;
+		//预加载广告实际曝光时间，unix时间戳
+		optional int64 preloadDate = 13;
+		optional bool isSupportJs = 14;
+	}
+
+	//app对象
+	message App {
+		optional string id = 1;
+		optional string name = 2;	
+		optional string bundle = 3;
+		optional string ver = 4;
+		repeated string cat = 5;
+		repeated string keywords = 6;
+		optional string domain = 7;
+
+		enum ContextType {
+			ContextType_Unkown = 0;
+			ContextType_Video = 1;
+			ContextType_Game = 2;
+			ContextType_Music = 3;
+			ContextType_App = 4;
+			ContextType_Text = 5;
+		}
+
+		message Content {
+			optional string title = 1;
+			optional string url = 2;
+			repeated string keywords = 3;
+			optional string artist = 4;
+			optional string album = 5;
+			repeated string cat = 6;
+			optional ContextType context = 7;
+			optional int32 avlen = 8;
+		}
+		optional Content content = 8;
+	}
+
+	message Geo {
+		optional float lat = 1;
+		optional float lon = 2;
+		optional string country = 3;
+		optional string region = 4;
+		optional string city = 5;
+		optional string zip = 6;	
+	}
+
+	message Device {
+		optional string did = 1;
+		optional EncType did_enc = 2;
+		//AndroidId或IDFA
+		optional string dpid = 3;
+		optional EncType dpid_enc = 4;
+		//mac
+		optional string mac = 5;
+		optional EncType mac_enc = 6;
+		//设备浏览器的User-Agent字符串
+		optional string ua = 8;	
+		//geo对象
+		optional Geo geo = 9;
+		//设备ip
+		optional string ip = 10;
+		optional DeviceType device_type = 11;
+		optional string make = 12;
+		optional string model = 13;
+		optional OsType os = 14;
+		optional string osv = 15;
+		//联网类型, 0:unknown, 1:wifi, 2:2g, 3:3g, 4:4g
+		//optional int32 connection_type = 12;
+		optional ConnectionType connection_type = 16;
+		// 运营商代码，MCC+MNC
+		optional string carrier = 17;
+		optional string language = 18;
+		optional Size size = 19;
+		optional int32 ppi = 20;
+	}
+
+	message User {
+		optional string id = 1;
+		optional int32 yob = 2;
+		optional Gender gender = 3;
+		repeated string keywords = 4;
+		// 用户设置的位置(home)
+		optional Geo geo = 5;
+		//年龄偏移值
+		optional int32 ageOffset = 6;
+	}
+	message Site {
+		optional string id = 1;
+	    optional string name = 2;
+	    optional string domain = 3;
+	    repeated string cat = 4;
+	    // URL of the page where the impression will be shown.
+	    optional string page = 5;
+	    optional string ref = 6;
+	    repeated string keywords = 7;
+	}
+
+	optional bool is_test = 20 [default = false];
+	optional bool is_ping = 21 [default = false]; 
+	optional string sid = 22;
+
+	repeated Impression imps = 2;
+	optional App app = 3;
+	optional Device device = 4;
+	optional User user = 5;
+
+	//禁止的行业类别
+	repeated string bcat = 6;
+	//广告主黑名单
+	repeated string badv = 7;
+	repeated string bapp = 8;
+	optional Site site = 9;
+}
+
+message BidResponse {
+	optional string bid = 1;
+	optional string dspid = 2;
+
+	message Bid {
+		//dsp生成唯一id
+        optional string id = 1;
+		//竞价价格
+		optional int32 price = 2;
+		//广告id
+		optional int64 adid = 3;
+		optional string impid = 4;
+		optional string ext = 5;
+		optional string dealid = 6;
+	}
+
+	message SeatBid {
+		optional string seatId = 1;
+		repeated Bid bid = 2;
+	}
+	repeated SeatBid seatbids = 3;
+	optional int32 nbr = 4;
+	optional string zuid = 5;
+}

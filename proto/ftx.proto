@@ -1,0 +1,404 @@
+//本文档为本系统用来请求广告信息的协议文档。
+package ftx;
+
+message BidRequest {
+  //由系统生成的唯一的ID号，作为整个竞价通路的校验标志。
+  required string id = 1;
+
+  //用户IP地址,点分十进制字符串
+  optional string ip = 2;
+
+  //ip转成geo code
+  optional int64 geo_id = 3;
+
+  //用户浏览器的UA信息
+  optional string user_agent = 4;
+
+  //用户的设备类型,文档补足
+  optional int32 device_type = 5;
+
+  message AdSlot {
+
+    //广告位曝光ID
+    optional string id = 1;
+
+    //广告位ID
+    optional string tag_id = 2;
+
+    //曝光底价,单位 千次曝光分
+    optional float bid_floor = 3;
+
+    // 展示类型,文档补足
+    optional int32 slot_type = 4;
+
+    message Size {
+      //宽
+      optional int32 width = 1;
+
+      //高
+      optional int32 height = 2;
+    }
+    repeated Size size = 5;
+
+    //发布商允许的创意类型,文档补足
+    repeated int32 creative_type = 7 [packed=true];
+
+    //发布商不允许的landing page url
+    repeated string excluded_landing_page_url = 8;
+
+    //广告位所处页面第几屏信息0:未知,1:第一屏,2:第二屏,3:第三屏,4:其他屏
+    optional int32 slot_pos = 9;
+
+    message PmpInfo {
+
+      //优先交易id
+      optional int32 order_id = 1;
+
+      //该优先交易的交易价格,单位是分
+      optional int32 bid_floor = 2;
+    }
+
+    //pmp相关信息
+    repeated PmpInfo pmp_info = 10;
+
+    message Video {
+
+      //广告视频最短时长,单位秒
+      optional int32 min_duration = 1;
+
+      //广告视频最长时长,单位秒
+      optional int32 max_duration = 2;
+
+      //该字段仅在linearity=1时有效;线性贴片,0:前帖;-1:中贴;-2:后贴
+      optional int32 start_delay = 3;
+
+      //本次请求的曝光中,需要播放的广告素材数量.只有贴片广告才会带这个字段.
+      //例如repeat=4,表示最后会竞价出4个出价最高的广告素材进行投放.
+      //一般情况下,前贴有可能有1至4贴广告,此时若大于一帖,则repeat=2~4.
+      //同时竞价多贴时可以一个SeatBid,多个Bid
+      optional int32 repeat = 4;
+
+      //最大bit rate
+      optional int32 max_bitrate = 5;
+      //是否可以跳过
+      optional int32 can_skip = 6;
+      //最大文件尺寸
+      optional int32 max_filesize = 7;
+    }
+
+    //视频流量的媒体信息
+    optional Video video = 11;
+
+    //展现监控url数量限制,-1:表示不限制,0:表示不支持,1:表示只能1个,2:表示2个
+    optional int32 imp_monitor_limit = 12 [default=-1];
+
+    //点击监控url数量限制,-1:表示不限制,0:表示不支持,1:表示只能1个,2:表示2个
+    optional int32 clk_monitor_limit = 13 [default=0];
+
+
+    message Native {
+      message Asset{
+
+        enum NativeType {
+          NATIVE_TITLE = 1;
+          NATIVE_IMAGE = 2;
+          NATIVE_ICON = 3;
+          NATIVE_SUBTITLE = 4;
+          NATIVE_DESCRIPTION = 5;
+          NATIVE_BUTTON_TEXT = 6;
+          NATIVE_VIDEO = 7;
+          NATIVE_LOGO = 8;
+        }
+
+        message Text {
+        //文字
+          optional int32 max_length = 1;
+        }
+        message Video {
+          optional int32 min_duration = 1;
+          optional int32 max_duration = 2;
+        }
+        message Image {
+          //图片url
+          optional int32 width = 1;
+          optional int32 height = 2;
+        }
+
+        optional int32 id = 1;
+        optional NativeType type = 2;
+        optional Image image = 3;
+        optional Text text = 4;
+        optional Video video = 5;
+      }
+      repeated Asset asset = 2;
+    }
+
+    optional Native native = 15;
+
+    //0:all 1:redirect 2:download
+    optional int32  click_action = 18;
+
+    //广告的模板id,图文广告或者某些需要的情况下存在
+    repeated int32 template_id = 19;
+  }
+
+  // 默认每次请求一个广告位
+  repeated AdSlot ad_slot = 6;
+
+  message User {
+
+    //用户的id号
+    optional string user_id = 1;
+
+    //cookie的版本号
+    optional uint32 user_id_version = 2;
+
+    //流量来源id，后续请使用外层source_id,此字段不再填充值
+    optional int32 source_id = 3;
+
+    //流量来源第三方cookie值,根据source_id的值不同表征cookie所属三方
+    optional string third_user_id = 4;
+
+    //用户分类,文档补足
+    repeated int64 user_category = 5;
+
+  }
+
+  //用户信息
+  optional User user = 7;
+
+  message Site {
+
+    //当前页面URL
+    optional string url = 1;
+
+    //请求的refer
+    optional string referer = 2;
+
+    //页面语言类型
+    optional string language = 3;
+
+    //页面分类,文档补足
+    repeated int32 page_category = 4;
+
+    //页面关键词
+    repeated string page_keyword = 5;
+
+    //发布商不允许的广告行业,文档补足
+    repeated int32 excluded_product_category = 6 [packed=true];
+
+    message VideoContent {
+
+      //视频的标题
+      optional string title = 1;
+
+      //视频标签关键字
+      repeated string video_keyword  = 2;
+
+      //频道id和页面分类相同
+      repeated int64 channel_id = 3;
+
+      //视频的播放时长
+      optional int32  video_length = 4;
+    }
+
+    //视频的内容相关信息.只有视频贴片类型的广告位才会有这个字段
+    optional VideoContent video_content = 7;
+
+    optional string country_code = 8;
+  }
+
+  //页面信息
+  optional Site site = 8;
+
+  message Mobile {
+    enum IDEnc {
+      DEFAULT = 0;
+      MD5 = 1;
+      SHA1 = 2;
+    }
+
+    //设备操作系统,文档补足
+    optional int32 os = 1;
+
+    //设备操作系统版本，如"3.1.2"
+    optional string os_version = 2;
+
+    //纬度,取值从-90到90，南为负值
+    optional float latitude = 3;
+
+    //经度,取值从-180到180，西为负值
+    optional float longitude = 4;
+
+    //设备屏宽
+    optional int32 screen_width = 5;
+
+    //设备屏高
+    optional int32 screen_height = 6;
+
+    //流量源,0:未识别,1:APP,2:WAP
+    optional int32 source = 7;
+
+    //idfa,默认不加密, (如果以MD5方式加密，MD5(idfa)转大写)
+    optional string idfa = 8;
+
+    //idfa加密方式, 0: 明文，1:MD5, 2:SHA1, 默认填0
+    optional uint32 idfa_enc = 9;
+    //imei, 默认不加密, (如果以MD5方式加密，MD5(imei)转大写)
+
+    optional string imei = 10;
+
+    //imei加密方式, 0: 明文，1:MD5, 2:SHA1, 默认填0
+    optional uint32 imei_enc = 11;
+
+    //加密后的androidid, MD5(androidid)转大写
+    optional string android_id = 12;
+
+    //imei加密方式, 0: 明文，1:MD5, 2:SHA1, 默认填0
+    optional uint32 android_id_enc = 13;
+
+    //终端网卡MAC地址去除冒号分隔符,加密后的mac, MD5(mac)转大写,加密前先进行格式转换去除冒号分隔符
+    optional string mac = 14;
+
+    //mac加密方式, 0: 明文，1:MD5, 2:SHA1, 默认填0
+    optional uint32 mac_enc = 15;
+
+    //Openudid, 默认不加密
+    optional string openudid = 16;
+
+    //设备品牌(小写),如：samsung,nokia
+    optional string brand = 17;
+
+    //设备型号(首字母大写),如:N70, Galaxy
+    optional string model = 18;
+
+    //运营商标识,文档补足
+    optional int32 carrier_id = 19;
+
+    //连接类型,文档补足
+    optional uint32 connection_type = 20;
+
+    //应用名称
+    optional string app_name = 21;
+
+    //如果来自苹果商店，则直接是app-store id
+    //如果来自Android设备，则是package的全名
+    optional string app_bundle_id = 22;
+
+    //app的行业分类
+    optional int32 app_category = 23;
+
+    //App开发者ID
+    optional int32 app_publisher_id = 24;
+
+    //屏幕密度，一个逻辑像素等于几个实际像素
+    optional double screen_density = 25;
+
+    //应用版本
+    optional string app_version = 26;
+
+    //SDK版本
+    optional string sdk_version = 27;
+    //应用id
+    optional string app_id = 28;
+  }
+  optional Mobile mobile = 9;
+
+  //vendor对http支持情况
+  //1表示仅支持http
+  //2表示仅支持https
+  //3表示都支持
+  optional int32 monitor_url_protocol = 10 [default=3];
+
+  //vendor对302跳转支持 0表示不支持，1表示支持
+  optional int32 client_direction = 11 [default=1];
+
+  //流量来源id
+  optional int32 source_id = 12;
+
+  //流量来源方，分配的频道信息
+  message SourceChannel {
+    //一级频道信息
+    repeated string first_channel = 1;
+    //二级频道信息
+    repeated string second_channel = 2;
+  }
+  optional SourceChannel source_channel = 13;
+
+  optional bool is_debug = 20 [default = false];
+
+  optional bool is_test = 21 [default = false];
+}
+
+//BidResponse是竞价方收到广告请求时返回给系统的响应信息，该信息中包含了竞价信息和展示广告的相关信息
+message BidResponse {
+
+  //与REQUEST中的id一致，否则会被认为无效。
+  required string id = 1;
+
+  //DSP给出的该次竞价的ID
+  optional string bid_id = 2;
+
+  message Bid {
+    // 广告位顺序ID,对应BidRequest.AdSlot.id
+    optional string id = 1;
+
+    //DSP对该次出价分配的ID
+    optional string dsp_imp_id = 2;
+
+    //广告位ID
+    optional string tag_id = 3;
+
+    //本系统审核的时候分配给竞价方的创意ID号,每个创意必须有一个创意ID号，每个创意ID号只能绑定给一个创意。
+    required int32 creative_id = 4;
+
+    // 仅动态创意需要填充,暂不支持
+    optional string html_snippet = 5;
+
+    //出价,单位千次曝光分
+    required int32 price = 6;
+
+    // 广告主id.动态创意及关键词需要填充
+    // 动态创意要求一个html snippet的所有广告属于同一个广告主。
+    optional uint64 advertiser_id = 7;
+
+    // 物料尺寸 - 宽度.需与请求中的尺寸一致
+    optional int32 width = 8;
+
+    // 物料尺寸 - 高度.需与请求中的尺寸一致
+    optional int32 height = 9;
+
+    // 视频贴片时长,物料类型为视频贴片时需要填充
+    optional int32 video_duration = 10 [default=0];
+    optional int32 bitrate = 25;
+
+    // 创意所属行业的行业id,本字段的意义与静态创意中入库物料所需
+    // 行业id相同
+    optional int32 category = 11;
+
+    // 创意的物料类型
+    optional int32 creative_type = 12;
+
+    //广告素材URL
+    optional string material_url = 14;
+
+    //参于优先竞价的id
+    optional int32 order_id = 18;
+
+    //dsp自定义宏,用于替换曝光,点击和winnotice中的__EXT__
+    optional string ext_data = 19;
+
+    optional string title = 21;
+
+  }
+
+  message SeatBid {
+    //一个adslot可以有多个bid,竞价多贴
+    repeated Bid bid = 1;
+  }
+
+  //回复参与竞价信息,一次竞价多个adslot,目前仅支持一次竞价一个adslot
+  repeated SeatBid seat_bid = 3;
+}
+
+
