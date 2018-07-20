@@ -229,6 +229,9 @@ func httpDo(bidReq *http.Request) {
 	handlerSid := resp.Request.URL.Path
 	handlerSid = strings.Trim(handlerSid, "/")
 	contentType := resp.Header.Get(KcontentType)
+	if len(contentType) ==0 {
+		contentType = resp.Request.Header.Get(KcontentType)
+	}
 	// 尽量用容易读的方式输出，json直接输出，protobuf则输出解码后的数据
 	switch contentType {
 	case ContentTypeJson:
