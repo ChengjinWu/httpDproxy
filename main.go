@@ -125,9 +125,6 @@ func httpDo(bidReq *http.Request) {
 	bidReq.URL.Scheme = "http"
 	bidReq.URL.Host = Host
 	bidReq.Host = Host
-	if printReq {
-		fmt.Println(bidReq.Method,bidReq.URL.String())
-	}
 	client := &http.Client{}
 	req, _ := http.NewRequest(bidReq.Method, bidReq.URL.String(), bidReq.Body)
 	for key, values := range bidReq.Header {
@@ -170,6 +167,10 @@ func httpDo(bidReq *http.Request) {
 				fmt.Println(err.Error())
 			} else {
 				jsonBytes, _ := json.Marshal(rspMessage)
+				if printReq {
+					fmt.Println(bidReq.Method,bidReq.URL.String())
+					fmt.Println(base64.StdEncoding.EncodeToString(body))
+				}
 				fmt.Println(string(jsonBytes))
 			}
 		}
