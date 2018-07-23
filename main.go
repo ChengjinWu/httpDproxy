@@ -23,6 +23,7 @@ import (
 	"httpDproxy/proto/tanx"
 	"httpDproxy/proto/vam"
 	"httpDproxy/proto/zplay"
+	"flag"
 )
 
 //https://adxb.optaim.com/adinall
@@ -89,6 +90,94 @@ const (
 	ZadxFtxLetvPdb    = "letvadxpdb"
 	ZadxFtxSohuPdb    = "sohupdb"
 )
+
+var(
+	printReq bool
+)
+
+
+func init() {
+	flag.BoolVar(&printReq,"d",false,"print req info")
+}
+
+
+func main() {
+	engine := gin.New()
+	vi := engine.Group("/")
+	vi.Any("/*action", WithHeader)
+	err := engine.Run(":8341")
+	if err != nil {
+		fmt.Println(err)
+	}
+}
+
+func WithHeader(ctx *gin.Context) {
+	ctx.Request.Header.Add("requester-uid", "id")
+	httpDo(ctx.Request)
+}
+
+
+func httpDo(bidReq *http.Request) {
+	if bidReq == nil {
+		fmt.Println("ffffffff")
+		return
+	}
+	bidReq.URL.Scheme = "http"
+	bidReq.URL.Host = Host
+	bidReq.Host = Host
+	if printReq {
+		fmt.Println(bidReq.Method,bidReq.URL.String())
+	}
+	client := &http.Client{}
+	req, _ := http.NewRequest(bidReq.Method, bidReq.URL.String(), bidReq.Body)
+	for key, values := range bidReq.Header {
+		for _, value := range values {
+			req.Header.Add(key, value)
+		}
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	if resp == nil || resp.Body == nil {
+		fmt.Println("data is null")
+		return
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	handlerSid := resp.Request.URL.Path
+	handlerSid = strings.Trim(handlerSid, "/")
+	contentType := resp.Header.Get(KcontentType)
+	if len(contentType) ==0 {
+		contentType = resp.Request.Header.Get(KcontentType)
+	}
+	// 尽量用容易读的方式输出，json直接输出，protobuf则输出解码后的数据
+	switch contentType {
+	case ContentTypeJson:
+		fmt.Println(string(body))
+	case ContentTypeProtobuf, ContentTypeOctetStream:
+		rspMessage := getPbMessage(handlerSid, kLogTypeRsp)
+		if rspMessage == nil {
+			fmt.Println(base64.StdEncoding.EncodeToString(body))
+		} else {
+			if err := proto.Unmarshal(body, rspMessage); err != nil {
+				fmt.Println(err.Error())
+			} else {
+				jsonBytes, _ := json.Marshal(rspMessage)
+				fmt.Println(string(jsonBytes))
+			}
+		}
+	default:
+		fmt.Println("unsupported protocol:" + contentType)
+	}
+}
+
 
 func getPbMessage(sid string, logType string) proto.Message {
 	switch sid {
@@ -193,77 +282,4 @@ func getPbMessage(sid string, logType string) proto.Message {
 	}
 
 	return nil
-}
-
-func httpDo(bidReq *http.Request) {
-	if bidReq == nil {
-		fmt.Println("ffffffff")
-		return
-	}
-	bidReq.URL.Scheme = "http"
-	bidReq.URL.Host = Host
-	bidReq.Host = Host
-	client := &http.Client{}
-	req, _ := http.NewRequest(bidReq.Method, bidReq.URL.String(), bidReq.Body)
-	for key, values := range bidReq.Header {
-		for _, value := range values {
-			req.Header.Add(key, value)
-		}
-	}
-	resp, err := client.Do(req)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	if resp == nil || resp.Body == nil {
-		fmt.Println("data is null")
-		return
-	}
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	handlerSid := resp.Request.URL.Path
-	handlerSid = strings.Trim(handlerSid, "/")
-	contentType := resp.Header.Get(KcontentType)
-	if len(contentType) ==0 {
-		contentType = resp.Request.Header.Get(KcontentType)
-	}
-	// 尽量用容易读的方式输出，json直接输出，protobuf则输出解码后的数据
-	switch contentType {
-	case ContentTypeJson:
-		fmt.Println(string(body))
-	case ContentTypeProtobuf, ContentTypeOctetStream:
-		rspMessage := getPbMessage(handlerSid, kLogTypeRsp)
-		if rspMessage == nil {
-			fmt.Println(base64.StdEncoding.EncodeToString(body))
-		} else {
-			if err := proto.Unmarshal(body, rspMessage); err != nil {
-				fmt.Println(err.Error())
-			} else {
-				jsonBytes, _ := json.Marshal(rspMessage)
-				fmt.Println(string(jsonBytes))
-			}
-		}
-	default:
-		fmt.Println("unsupported protocol:" + contentType)
-	}
-}
-
-func main() {
-	engine := gin.New()
-	vi := engine.Group("/")
-	vi.Any("/*action", WithHeader)
-	err := engine.Run(":8341")
-	if err != nil {
-		fmt.Println(err)
-	}
-}
-
-func WithHeader(ctx *gin.Context) {
-	ctx.Request.Header.Add("requester-uid", "id")
-	httpDo(ctx.Request)
 }
