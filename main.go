@@ -24,6 +24,7 @@ import (
 	"httpDproxy/proto/vam"
 	"httpDproxy/proto/zplay"
 	"flag"
+	"math/rand"
 )
 
 //https://adxb.optaim.com/adinall
@@ -154,28 +155,33 @@ func httpDo(bidReq *http.Request) {
 	if len(contentType) ==0 {
 		contentType = resp.Request.Header.Get(KcontentType)
 	}
+	randNumber := rand.Int63n(10000000000)
+	if printReq {
+		fmt.Println(randNumber,bidReq.Method,bidReq.URL.String())
+		fmt.Println(randNumber,base64.StdEncoding.EncodeToString(body))
+	}
 	// 尽量用容易读的方式输出，json直接输出，protobuf则输出解码后的数据
 	switch contentType {
 	case ContentTypeJson:
-		fmt.Println("json：",string(body))
+		fmt.Println(randNumber,"json：",string(body))
 	case ContentTypeProtobuf, ContentTypeOctetStream:
 		rspMessage := getPbMessage(handlerSid, kLogTypeRsp)
 		if rspMessage == nil {
-			fmt.Println(base64.StdEncoding.EncodeToString(body))
+			fmt.Println(randNumber,base64.StdEncoding.EncodeToString(body))
 		} else {
 			if err := proto.Unmarshal(body, rspMessage); err != nil {
-				fmt.Println(err.Error())
+				fmt.Println(randNumber,err.Error())
 			} else {
+
 				jsonBytes, _ := json.Marshal(rspMessage)
 				if printReq {
-					fmt.Println(bidReq.Method,bidReq.URL.String())
-					fmt.Println(base64.StdEncoding.EncodeToString(body))
+					fmt.Println(randNumber,base64.StdEncoding.EncodeToString(body))
 				}
-				fmt.Println("proto：",string(jsonBytes))
+				fmt.Println(randNumber,"proto：",string(jsonBytes))
 			}
 		}
 	default:
-		fmt.Println("unsupported protocol:" + contentType)
+		fmt.Println(randNumber,"unsupported protocol:" + contentType)
 	}
 }
 
