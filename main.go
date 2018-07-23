@@ -97,7 +97,7 @@ var(
 
 
 func init() {
-	flag.BoolVar(&printReq,"d",false,"print req info")
+	flag.BoolVar(&printReq,"d",true,"print req info")
 }
 
 
