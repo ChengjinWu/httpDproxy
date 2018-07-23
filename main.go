@@ -157,7 +157,7 @@ func httpDo(bidReq *http.Request) {
 	// 尽量用容易读的方式输出，json直接输出，protobuf则输出解码后的数据
 	switch contentType {
 	case ContentTypeJson:
-		fmt.Println(string(body))
+		fmt.Println("json：",string(body))
 	case ContentTypeProtobuf, ContentTypeOctetStream:
 		rspMessage := getPbMessage(handlerSid, kLogTypeRsp)
 		if rspMessage == nil {
@@ -171,7 +171,7 @@ func httpDo(bidReq *http.Request) {
 					fmt.Println(bidReq.Method,bidReq.URL.String())
 					fmt.Println(base64.StdEncoding.EncodeToString(body))
 				}
-				fmt.Println(string(jsonBytes))
+				fmt.Println("proto：",string(jsonBytes))
 			}
 		}
 	default:
